@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './AdminProjets.css';
 
 // Change cette URL quand tu déploieras le backend en ligne
-const API_URL = 'http://localhost:4000/api/projects';
+const API_URL = 'http://https://portfolio-psi-kohl-65.vercel.app/api/projects';
 
 function AdminProjets() {
   const [projects, setProjects] = useState([]);
