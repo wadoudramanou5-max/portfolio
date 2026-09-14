@@ -137,13 +137,15 @@ function App() {
       {/* Compétences */}
       <section id="competences" className="container">
         <h2>Langages et outils</h2>
-        <div className="technologies">
-          {technologies.map((tech, index) => (
-            <div className="card" key={index}>
-              <img src={tech.image} alt={tech.name} />
-              <p>{tech.name}</p>
-            </div>
-          ))}
+        <div className="marquee-wrapper">
+          <div className="marquee-track">
+            {[...technologies, ...technologies].map((tech, index) => (
+              <div className="card" key={index}>
+                <img src={tech.image} alt={tech.name} />
+                <p>{tech.name}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
