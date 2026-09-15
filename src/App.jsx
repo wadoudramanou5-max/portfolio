@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import React from 'react';
 import hero from './assets/jj.jpeg';
 import project1 from './assets/projet.png';
@@ -46,19 +46,64 @@ const projects = [
     image: project2,
     link: 'https://blog-a0yr.onrender.com/'
   },
-  // Vous pouvez ajouter un troisième projet réel ou supprimer cette entrée
-  // {
-  //   name: 'Autre projet',
-  //   description: 'Description de votre troisième projet.',
-  //   image: project1,
-  //   link: 'https://exemple.com'
-  // },
 ];
 
 function App() {
-  // Animation au scroll et ancres
+  const [loading, setLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [fadeOut, setFadeOut] = useState(false);
+
+  // 🔹 Préchargement réel des images + progression fluide
   useEffect(() => {
-    const sections = document.querySelectorAll('#accueil, #competences, #services, #temoignages, #projets, #contact');
+    const imagesToPreload = [hero, project1, project2];
+    const totalSteps = imagesToPreload.length + 2; // +2 pour les fonts / rendu
+    let completed = 0;
+
+    const updateProgress = () => {
+      completed++;
+      const percent = Math.min((completed / totalSteps) * 100, 100);
+      setProgress(percent);
+      if (completed >= totalSteps) {
+        setTimeout(() => setFadeOut(true), 300);
+        setTimeout(() => setLoading(false), 900);
+      }
+    };
+
+    // Précharger les images
+    imagesToPreload.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+      img.onload = updateProgress;
+      img.onerror = updateProgress;
+    });
+
+    // Délais artificiels pour un rendu fluide (fonts, DOM)
+    setTimeout(updateProgress, 400);
+    setTimeout(updateProgress, 800);
+
+    // Sécurité : forcer la fin après 4s max
+    const safety = setTimeout(() => {
+      setProgress(100);
+      setFadeOut(true);
+      setTimeout(() => setLoading(false), 600);
+    }, 4000);
+
+    return () => clearTimeout(safety);
+  }, []);
+
+  // 🔹 Empêcher le scroll pendant le chargement
+  useEffect(() => {
+    document.body.style.overflow = loading ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [loading]);
+
+  // 🔹 Animation au scroll + ancres (démarre après le loader)
+  useEffect(() => {
+    if (loading) return;
+
+    const sections = document.querySelectorAll(
+      '#accueil, #competences, #services, #temoignages, #projets, #contact'
+    );
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -81,26 +126,45 @@ function App() {
         const target = document.getElementById(targetId);
         if (target) {
           e.preventDefault();
-          target.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }
     };
 
     const anchorLinks = document.querySelectorAll('a[href^="#"]');
-    anchorLinks.forEach(link => {
-      link.addEventListener('click', handleAnchorClick);
-    });
+    anchorLinks.forEach(link => link.addEventListener('click', handleAnchorClick));
 
     return () => {
       sections.forEach(section => observer.unobserve(section));
-      anchorLinks.forEach(link => {
-        link.removeEventListener('click', handleAnchorClick);
-      });
+      anchorLinks.forEach(link => link.removeEventListener('click', handleAnchorClick));
     };
-  }, []);
+  }, [loading]);
+
+  // 🔹 ÉCRAN DE CHARGEMENT
+  if (loading) {
+    return (
+      <div className={`loader-screen ${fadeOut ? 'fade-out' : ''}`}>
+        <div className="loader-content">
+          <div className="loader-logo">
+            Wadoud<span>.Dev</span>
+          </div>
+
+          <div className="loader-bar">
+            <div
+              className="loader-bar-fill"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+
+          <div className="loader-percent">{Math.round(progress)}%</div>
+
+          <div className="loader-dots">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
